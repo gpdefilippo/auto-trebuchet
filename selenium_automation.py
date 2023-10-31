@@ -1,3 +1,5 @@
+from typing import Union, Tuple
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -32,34 +34,49 @@ class SelTrebuchet:
             return webdriver.Edge()
 
     def increase_playspeed(self):
-        """ If animation is playing, this shortens its length.
-            not necessary but for the sake of having fun with selenium
+        """
+        If animation is playing, this shortens its length.
+        not necessary but for the sake of having fun with selenium
         """
         speed = self.driver.find_element_by_id("playSpeed")
         for _ in range(5):
             speed.send_keys(Keys.ARROW_RIGHT)
 
-    def simulate_with_params(self, len_shortarm: float, mass_weight: float, angle_release: float):
-        short_arm = self.driver.find_element_by_id("lengthArmShort")
-        short_arm.clear()
-        short_arm.send_keys(f"{len_shortarm}", Keys.RETURN)
+    def enter_to_element(self, element_id: str, value: Union[str, int, float]) -> None:
+        """
+        Enter a value to field at specified element ID and press return key
+        """
+        element = self.driver.find_element_by_id(element_id)
+        element.clear()
+        element.send_keys(f"{value}", Keys.RETURN)
 
-        weight = self.driver.find_element_by_id("massWeight")
-        weight.clear()
-        weight.send_keys(f"{mass_weight}", Keys.RETURN)
+    def simulate(self, shortarm_len: float, weight_mass: float, release_angle: float) -> Tuple[float, float, float]:
+        """
+        Simulate virtual trebuchet with given parameters.
 
-        angle = self.driver.find_element_by_id("releaseAngle")
-        angle.clear()
-        angle.send_keys(f"{angle_release}", Keys.RETURN)
+        Args:
+            shortarm_len (float): Length of the short arm in ft
+            weight_mass (float): Mass of the weight in lbs
+            release_angle (float): Release angle in degrees.
+
+        Returns:
+            Tuple[float, float, float]: A tuple containing max (distance, height, time) of trebuchet launch.
+        """
+        self.enter_to_element("lengthArmShort", shortarm_len)
+        self.enter_to_element("massWeight", weight_mass)
+        self.enter_to_element("releaseAngle", release_angle)
 
         button = self.driver.find_elements_by_tag_name('button')[0]
         button.click()
 
         distance = self.driver.find_element_by_xpath(
             "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]").text
+        distance = float(distance.split(' ')[0])
         height = self.driver.find_element_by_xpath(
             "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]").text
-        time = self.driver.find_element_by_xpath(
+        height = float(height.split(' ')[0])
+        time_ = self.driver.find_element_by_xpath(
             "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]").text
+        time_ = float(time_.split(' ')[0])
 
-        return distance, height, time
+        return distance, height, time_

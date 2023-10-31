@@ -12,12 +12,12 @@ class TestSelTrebuchet(unittest.TestCase):
             mass_weight = 50.0
             angle_release = 60.0
 
-            distance, height, time = trebuchet.simulate_with_params(
+            distance, height, time = trebuchet.simulate(
                 len_shortarm, mass_weight, angle_release)
 
-        self.assertEqual(distance, '44.546 ft')
-        self.assertEqual(height, '34.870 ft')
-        self.assertEqual(time, '4.033 s')
+        self.assertAlmostEqual(distance, 44.546, places=1)
+        self.assertAlmostEqual(height, 34.870, places=1)
+        self.assertAlmostEqual(time, 4.033, places=1)
 
 
 if __name__ == '__main__':
