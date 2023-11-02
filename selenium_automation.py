@@ -2,13 +2,14 @@ from typing import Union, Tuple
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.options import ArgOptions
+# from webdriver_manager.chrome import ChromeDriverManager
+# from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from webdriver_manager.firefox import GeckoDriverManager
-from selenium.webdriver.firefox.service import Service as FirefoxService
+# from webdriver_manager.firefox import GeckoDriverManager
+# from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.edge.service import Service as EdgeService
+# from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,8 +17,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class SelTrebuchet:
-    def __init__(self, browser: str):
+    def __init__(self, browser: str, options: ArgOptions = None):
         self.browser = browser
+        self.options = options
         self.driver = self.configure_webdriver()
         self.driver.get('https://virtualtrebuchet.com/')
 
@@ -34,15 +36,18 @@ class SelTrebuchet:
 
     def configure_webdriver(self):
         if self.browser == 'chrome':
-            self.options = ChromeOptions()
+            self.options = ChromeOptions() if not self.options else self.options
             self.options.add_argument('--headless=new')
-            return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=self.options)
+            # return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=self.options)
+            return webdriver.Chrome(options=self.options)
         elif self.browser == 'firefox':
-            self.options = FirefoxOptions()
+            self.options = FirefoxOptions() if not self.options else self.options
             self.options.add_argument("--headless")
-            return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=self.options)
+            # return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=self.options)
+            return webdriver.Firefox(options=self.options)
         elif self.browser == 'edge':
-            return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
+            # return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
+            return webdriver.Edge()
 
     def increase_playspeed(self):
         """
@@ -59,7 +64,7 @@ class SelTrebuchet:
         """
         element = self.driver.find_element(By.ID, element_id)
         element.clear()
-        element.send_keys(f"{value}", Keys.RETURN)
+        element.send_keys(f"{value}")
 
     def simulate(self, shortarm_len: float, weight_mass: float, release_angle: float) -> Tuple[float, float, float]:
         """
@@ -73,6 +78,9 @@ class SelTrebuchet:
         Returns:
             Tuple[float, float, float]: A tuple containing max (distance, height, time) of trebuchet launch.
         """
+        wait = WebDriverWait(self.driver, 60)
+        wait.until(EC.element_to_be_clickable((By.TAG_NAME, "button")))
+
         self.enter_to_element("lengthArmShort", shortarm_len)
         self.enter_to_element("massWeight", weight_mass)
         self.enter_to_element("releaseAngle", release_angle)
@@ -80,14 +88,17 @@ class SelTrebuchet:
         button = self.driver.find_elements(By.TAG_NAME, 'button')[0]
         button.click()
 
+        wait = WebDriverWait(self.driver, 60)
+        wait.until(EC.presence_of_element_located((By.XPATH,
+                                               '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
         distance = self.driver.find_element(By.XPATH,
-            "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]").text
+                                            '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
         distance = float(distance.split(' ')[0])
         height = self.driver.find_element(By.XPATH,
-            "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]").text
+                                          '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
         height = float(height.split(' ')[0])
         time_ = self.driver.find_element(By.XPATH,
-            "/html/body/div/div[1]/main/div[2]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]").text
+                                         '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
         time_ = float(time_.split(' ')[0])
 
         return distance, height, time_

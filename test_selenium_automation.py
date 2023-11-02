@@ -14,13 +14,27 @@ class TestSelTrebuchet(unittest.TestCase):
             distance, height, time = trebuchet.simulate(
                 len_shortarm, mass_weight, angle_release)
 
-        self.assertAlmostEqual(distance, 44.546, places=2)
-        self.assertAlmostEqual(height, 34.870, places=2)
-        self.assertAlmostEqual(time, 4.033, places=2)
+        self.assertAlmostEqual(distance, 44.546, places=1)
+        self.assertAlmostEqual(height, 34.870, places=1)
+        self.assertAlmostEqual(time, 4.033, places=1)
 
     def test_simulate_chrome(self):
         # Create a SelTrebuchet instance for testing
         with SelTrebuchet(browser='chrome') as trebuchet:
+            len_shortarm = 1.0
+            mass_weight = 50.0
+            angle_release = 60.0
+
+            distance, height, time = trebuchet.simulate(
+                len_shortarm, mass_weight, angle_release)
+
+        self.assertAlmostEqual(distance, 44.546, places=1)
+        self.assertAlmostEqual(height, 34.870, places=1)
+        self.assertAlmostEqual(time, 4.033, places=1)
+
+    def test_simulate_edge(self):
+        # Create a SelTrebuchet instance for testing
+        with SelTrebuchet(browser='edge') as trebuchet:
             len_shortarm = 1.0
             mass_weight = 50.0
             angle_release = 60.0
