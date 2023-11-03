@@ -3,12 +3,11 @@ import pandas as pd
 
 from selenium_automation import SelTrebuchet
 
-design_file = 'CCF desing 10 29.xlsx'
+parent_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_design(design_file: str, browser: str = 'firefox') -> None:
-    out_path = os.path.join('results', design_file)
-    design_path = os.path.join('designs', design_file)
+def run_design(design_path: str, browser: str = 'firefox') -> None:
+    out_path = os.path.join(parent_directory, 'results', os.path.basename(design_path))
     design = pd.read_excel(design_path)
 
     distance, height, time = [0] * design.shape[0], [0] * design.shape[0], [0] * design.shape[0]
@@ -23,7 +22,3 @@ def run_design(design_file: str, browser: str = 'firefox') -> None:
     if not os.path.exists(directory):
         os.makedirs(directory)
     design.to_excel(out_path, index=False)
-
-
-if __name__ == "__main__":
-    run_design(design_file, "edge")
