@@ -26,4 +26,4 @@ def run_design(design_file: str, browser: str = 'firefox') -> None:
 
 
 if __name__ == "__main__":
-    run_design(design_file)
+    run_design(design_file, "edge")

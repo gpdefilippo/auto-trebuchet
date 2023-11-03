@@ -23,7 +23,7 @@ class SelTrebuchet:
         self.driver = self.configure_webdriver()
         self.driver.get('https://virtualtrebuchet.com/')
 
-        wait = WebDriverWait(self.driver, 30)
+        wait = WebDriverWait(self.driver, 60)
         wait.until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
         self.increase_playspeed()
 
@@ -45,9 +45,9 @@ class SelTrebuchet:
             self.options.add_argument("--headless")
             # return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=self.options)
             return webdriver.Firefox(options=self.options)
-        elif self.browser == 'edge':
-            # return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
-            return webdriver.Edge()
+        # elif self.browser == 'edge':
+        #     # return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
+        #     return webdriver.Edge()
 
     def increase_playspeed(self):
         """
@@ -89,8 +89,8 @@ class SelTrebuchet:
         button.click()
 
         wait = WebDriverWait(self.driver, 60)
-        wait.until(EC.presence_of_element_located((By.XPATH,
-                                               '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+        wait.until(EC.visibility_of_element_located((By.XPATH,
+                                                     '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
         distance = self.driver.find_element(By.XPATH,
                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
         distance = float(distance.split(' ')[0])
