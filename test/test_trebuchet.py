@@ -8,11 +8,13 @@ from trebuchet import run_design
 class TestTrebuchet(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.sample_data_path = 'data/sample_data.xlsx'
+        parent = os.path.dirname(os.path.abspath(__file__))
 
-        sample_results_path = 'data/sample_results.xlsx'
+        self.sample_data_path = os.path.join(parent, 'data', 'sample_data.xlsx')
+
+        sample_results_path = os.path.join(parent, 'data', 'sample_results.xlsx')
         self.sample_results = pd.read_excel(sample_results_path)
-        self.actual_results_path = '../results/sample_data.xlsx'
+        self.actual_results_path = os.path.join(parent, '..', 'results', 'sample_data.xlsx')
 
     def _test_run_design(self, browser: str):
         run_design(self.sample_data_path, browser=browser)
@@ -39,6 +41,9 @@ class TestTrebuchet(unittest.TestCase):
 
     def test_run_design_firefox(self):
         self._test_run_design(browser='firefox')
+
+    def test_run_design_edge(self):
+        self._test_run_design(browser='edge')
 
 
 if __name__ == '__main__':

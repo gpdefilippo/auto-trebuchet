@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 from PyQt5 import QtWidgets, QtCore
 
@@ -9,6 +10,7 @@ class TrebuchetApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.design_path = None
+        self.data_out = None
         self.browser = 'firefox'
 
         self.setupUI()
@@ -18,8 +20,10 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.setGeometry(100, 100, 400, 200)
 
         self.file_drop = DropSection()
+        self.file_drop.fileDropCompleted.connect(self.enable_run)
         self.last_uploaded = QtWidgets.QLabel("File Uploaded: ")
         self.run_button = QtWidgets.QPushButton("Run")
+        self.run_button.setEnabled(False)
         self.results_button = QtWidgets.QPushButton("Download Results")
         self.results_button.setEnabled(False)
         self.footer = QtWidgets.QLabel("Please Upload A Design File Above")
@@ -40,7 +44,7 @@ class TrebuchetApp(QtWidgets.QWidget):
     def run_function(self):
         try:
             self.footer.setText("Running Design...")
-            run_design(self.file_drop.design_path, self.browser)
+            self.data_out = run_design(self.file_drop.design_path, self.browser)
         except KeyError:
             self.footer.setText("Error: Design has invalid variable names")
             self.footer.setStyleSheet('color: red;')
@@ -53,8 +57,14 @@ class TrebuchetApp(QtWidgets.QWidget):
             with open(selected_file, 'w') as file:
                 file.write(f"Results from {self.iteration_count} iterations")
 
+    def enable_run(self):
+        self.last_uploaded.setText(f"File Uploaded: {os.path.basename(self.file_drop.design_path)}")
+        self.run_button.setEnabled(True)
+
 
 class DropSection(QtWidgets.QWidget):
+    fileDropCompleted = QtCore.pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background-color: lightgray;")
@@ -80,11 +90,8 @@ class DropSection(QtWidgets.QWidget):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        files = event.mimeData().urls()
-        file_paths = [url.toLocalFile() for url in files]
-        if file_paths:
-            for file_path in file_paths:
-                print(f"File dropped on section: {file_path}")
+        self.design_path = event.mimeData().urls()[0].toLocalFile()
+        self.fileDropCompleted.emit()
 
 
 if __name__ == '__main__':

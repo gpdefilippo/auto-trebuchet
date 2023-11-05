@@ -1,6 +1,6 @@
 from typing import Union, Tuple
-
 from selenium import webdriver
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.options import ArgOptions
 # from webdriver_manager.chrome import ChromeDriverManager
@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 # from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 # from selenium.webdriver.edge.service import Service as EdgeService
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
+# from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -36,18 +36,20 @@ class SelTrebuchet:
 
     def configure_webdriver(self):
         if self.browser == 'chrome':
-            self.options = ChromeOptions() if not self.options else self.options
-            self.options.add_argument('--headless=new')
+            if not self.options:
+                self.options = ChromeOptions()
+                self.options.add_argument('--headless=new')
             # return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=self.options)
             return webdriver.Chrome(options=self.options)
         elif self.browser == 'firefox':
-            self.options = FirefoxOptions() if not self.options else self.options
-            self.options.add_argument("--headless")
+            if not self.options:
+                self.options = FirefoxOptions()
+                self.options.add_argument("--headless")
             # return webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=self.options)
             return webdriver.Firefox(options=self.options)
-        # elif self.browser == 'edge':
-        #     # return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
-        #     return webdriver.Edge()
+        elif self.browser == 'edge':
+            # return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
+            return webdriver.Edge()
 
     def increase_playspeed(self):
         """
@@ -88,17 +90,32 @@ class SelTrebuchet:
         button = self.driver.find_elements(By.TAG_NAME, 'button')[0]
         button.click()
 
-        wait = WebDriverWait(self.driver, 60)
-        wait.until(EC.visibility_of_element_located((By.XPATH,
-                                                     '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(EC.presence_of_element_located((By.XPATH,
+                                                  '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+        # wait.until(lambda driver: self.wait_for_safe())
+
         distance = self.driver.find_element(By.XPATH,
                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
-        distance = float(distance.split(' ')[0])
         height = self.driver.find_element(By.XPATH,
                                           '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
-        height = float(height.split(' ')[0])
         time_ = self.driver.find_element(By.XPATH,
                                          '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
+
+        distance = float(distance.split(' ')[0])
+        height = float(height.split(' ')[0])
         time_ = float(time_.split(' ')[0])
 
         return distance, height, time_
+
+    def wait_for_safe(self) -> bool:
+        curr_xpath = (By.XPATH, '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[1]')
+        max_xpath = (By.XPATH, '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')
+
+        wait = WebDriverWait(self.driver, 30)
+        wait.until(EC.presence_of_element_located(max_xpath))
+
+        current = self.driver.find_element(*curr_xpath)
+        max_ = self.driver.find_element(*max_xpath)
+
+        return current.text != max_.text
