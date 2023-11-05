@@ -44,18 +44,20 @@ class TrebuchetApp(QtWidgets.QWidget):
     def run_function(self):
         try:
             self.footer.setText("Running Design...")
+            self.results_button.setEnabled(False)
             self.data_out = run_design(self.file_drop.design_path, self.browser)
+            self.results_button.setEnabled(True)
+            self.footer.setText("Design Complete")
         except KeyError:
             self.footer.setText("Error: Design has invalid variable names")
             self.footer.setStyleSheet('color: red;')
 
     def download_results(self):
-        # Simulate downloading results to a file
-        file_dialog = QtWidgets.QFileDialog.getSaveFileName(self, "Save Results", "", "Text Files (*.txt)")
-        selected_file = file_dialog[0]
-        if selected_file:
-            with open(selected_file, 'w') as file:
-                file.write(f"Results from {self.iteration_count} iterations")
+        default_filename = os.path.basename(self.file_drop.design_path)
+        file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save to Excel", default_filename,
+                                                   "Excel Files (*.xlsx);;All Files (*)")[0]
+        self.data_out.to_excel(file_path, index=False)
+        self.footer.setText('Download Design Complete')
 
     def enable_run(self):
         self.last_uploaded.setText(f"File Uploaded: {os.path.basename(self.file_drop.design_path)}")
