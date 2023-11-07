@@ -90,17 +90,29 @@ class SelTrebuchet:
         button = self.driver.find_elements(By.TAG_NAME, 'button')[0]
         button.click()
 
-        wait = WebDriverWait(self.driver, 30)
-        wait.until(EC.presence_of_element_located((By.XPATH,
-                                                  '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
-        # wait.until(lambda driver: self.wait_for_safe())
+        try:
+            wait = WebDriverWait(self.driver, 30)
+            wait.until(EC.presence_of_element_located((By.XPATH,
+                                                      '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+            # wait.until(lambda driver: self.wait_for_safe())
 
-        distance = self.driver.find_element(By.XPATH,
-                                            '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
-        height = self.driver.find_element(By.XPATH,
-                                          '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
-        time_ = self.driver.find_element(By.XPATH,
-                                         '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
+            distance = self.driver.find_element(By.XPATH,
+                                                '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
+            height = self.driver.find_element(By.XPATH,
+                                              '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
+            time_ = self.driver.find_element(By.XPATH,
+                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
+        except StaleElementReferenceException:
+            wait = WebDriverWait(self.driver, 30)
+            wait.until(EC.presence_of_element_located((By.XPATH,
+                                                       '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+
+            distance = self.driver.find_element(By.XPATH,
+                                                '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
+            height = self.driver.find_element(By.XPATH,
+                                              '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
+            time_ = self.driver.find_element(By.XPATH,
+                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
 
         distance = float(distance.split(' ')[0])
         height = float(height.split(' ')[0])

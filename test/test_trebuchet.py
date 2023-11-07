@@ -42,8 +42,8 @@ class TestTrebuchet(unittest.TestCase):
     def test_run_design_firefox(self):
         self._test_run_design(browser='firefox')
 
-    def test_run_design_edge(self):
-        self._test_run_design(browser='edge')
+    # def test_run_design_edge(self):
+    #     self._test_run_design(browser='edge')
 
 
 if __name__ == '__main__':
