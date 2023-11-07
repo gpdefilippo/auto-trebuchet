@@ -55,7 +55,7 @@ class TrebuchetApp(QtWidgets.QWidget):
     def download_results(self):
         default_filename = os.path.basename(self.file_drop.design_path)
         file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save to Excel", default_filename,
-                                                   "Excel Files (*.xlsx);;All Files (*)")[0]
+                                                          "Excel Files (*.xlsx);;All Files (*)")[0]
         self.data_out.to_excel(file_path, index=False)
         self.footer.setText('Download Design Complete')
 
