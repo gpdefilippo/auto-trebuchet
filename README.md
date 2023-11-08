@@ -1,12 +1,12 @@
 # auto-trebuchet
 Welcome to the Auto-trebuchet project!
 
-![App-preview](images/auto-trebuchet.jpg)
+![App-preview](images/auto-trebuchet.gif)
 
 ## Description
-This application facilitates education in running [Design of Experiements (DOE)](https://en.wikipedia.org/wiki/Design_of_experiments) in [JMP Statistical Software](https://www.jmp.com/en_us/home.html) using a [Virutal Trebuchet](virtualtrebuchet.com).
+This application facilitates education in running [Design of Experiments (DOE)](https://en.wikipedia.org/wiki/Design_of_experiments) in [JMP Statistical Software](https://www.jmp.com/en_us/home.html) using a [Virtual Trebuchet](https://www.virtualtrebuchet.com).
 
-Would you like hands on experience setting up a DOE in JMP to optimize your responses?<br>
+Would you like hands-on experience setting up a DOE in JMP to optimize your responses?<br>
 Do you want to see which parameters have the greatest effect on your experiment results?<br>
 Then try out our application and see if you can find the best parameters to optimize the height, distance, and time of an object being released by a trebuchet!
 
@@ -43,15 +43,15 @@ Run the application with the following command:
 ```sh
 python application.py
 ```
-1. A design file (.xlsx) is needed to run your experiement (see example design files in *'auto-trebuchet/designs'*)
-   * For our application we created designs that vary the virtual trebuchet's 'Length of Short Arm', 'Weight of Mass', and 'Release Angle'
+1. A design file (.xlsx) is needed to run your experiment (see example design files in *'auto-trebuchet/designs'*)
+   * For our application we created designs that vary the virtual trebuchets 'Length of Short Arm', 'Weight of Mass', and 'Release Angle'
    * Try to think of a good range for these values that will allow the trebuchet to properly fire and to optimize the height, distance, and time of the object
-   * Input as many iterations of experiements as you like, but always try to find the minimum amount of trials to save time and money
+   * Input as many iterations of experiments as you like, but always try to find the minimum amount of trials to save time and money
 2. Drag and drop your design file until the application
 3. Select web browser to use for automation
 4. If design file is accepted, click 'Run'
 5. Once the design has finished running, download the file by clicking 'Download Results'
 
 Now that we have the results from the Virtual Trebuchet, you can now analyze the results in JMP.<br>
-Look for which parameters have the greatest impact and see if you can design another experiement to further optimize!<br>
+Look for which parameters have the greatest impact and see if you can design another experiment to further optimize!<br>
 
