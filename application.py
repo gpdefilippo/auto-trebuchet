@@ -7,6 +7,8 @@ from trebuchet import run_design, load_design, validate_design
 
 
 class TrebuchetApp(QtWidgets.QWidget):
+    supported_browsers = {'Firefox', 'Chrome'}
+
     def __init__(self):
         super().__init__()
         self.design = None
@@ -24,15 +26,24 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.file_upload_label = QtWidgets.QLabel("File Uploaded: ")
         self.run_button = QtWidgets.QPushButton("Run")
         self.run_button.setEnabled(False)
+        self.browser_label = QtWidgets.QLabel("Select Browser:")
+        self.browser_combo = QtWidgets.QComboBox()
+        self.browser_combo.addItems(self.supported_browsers)
+        self.browser_combo.setCurrentText('Firefox')
         self.download_button = QtWidgets.QPushButton("Download Results")
         self.download_button.setEnabled(False)
-        self.footer = QtWidgets.QLabel("Please Upload A Design File Above")
+        self.footer = QtWidgets.QLabel("Upload A Design File Above")
         self.footer.setStyleSheet("font-size: 10px;")
 
+        run_browser_layout = QtWidgets.QHBoxLayout()
+        run_browser_layout.addWidget(self.run_button)
+        run_browser_layout.addWidget(self.browser_label)
+        run_browser_layout.addWidget(self.browser_combo)
+
         layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(run_browser_layout)
         layout.addWidget(self.file_drop)
         layout.addWidget(self.file_upload_label)
-        layout.addWidget(self.run_button)
         layout.addWidget(self.download_button)
         layout.addWidget(self.footer)
 
@@ -43,6 +54,7 @@ class TrebuchetApp(QtWidgets.QWidget):
 
     def click_run(self):
         try:
+            self.browser = self.browser_combo.currentText().lower()
             self.footer.setText("Running Design...")
             self.footer.setStyleSheet('color: white;')
             self.download_button.setEnabled(False)
@@ -69,10 +81,12 @@ class TrebuchetApp(QtWidgets.QWidget):
                 self.footer.setText(f'{error}')
                 self.footer.setStyleSheet('color: red;')
                 self.run_button.setEnabled(False)
+                self.run_button.setStyleSheet('')
                 self.file_upload_label.setText("File Uploaded: ")
             else:
                 self.file_upload_label.setText(f"File Uploaded: {os.path.basename(self.file_drop.design_path)}")
                 self.run_button.setEnabled(True)
+                self.run_button.setStyleSheet('background-color: #65C1FF;')
                 self.footer.setText("Upload Successful")
                 self.footer.setStyleSheet('color: white;')
         except ValueError:
@@ -80,6 +94,7 @@ class TrebuchetApp(QtWidgets.QWidget):
             self.footer.setText(f'Invalid format. Please upload an Excel file')
             self.footer.setStyleSheet('color: red;')
             self.run_button.setEnabled(False)
+            self.run_button.setStyleSheet('')
             self.file_upload_label.setText("File Uploaded: ")
 
 
