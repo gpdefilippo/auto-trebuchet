@@ -55,5 +55,3 @@ python application.py
 Now that we have the results from the Virtual Trebuchet, you can now analyze the results in JMP.<br>
 Look for which parameters have the greatest impact and see if you can design another experiement to further optimize!<br>
 
-
-## Contact
