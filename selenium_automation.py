@@ -17,6 +17,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class SelTrebuchet:
+    distance_xpath = (By.XPATH, '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')
+    height_xpath = (By.XPATH, '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]')
+    time_xpath = (By.XPATH, '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]')
+
     def __init__(self, browser: str, options: ArgOptions = None):
         self.browser = browser
         self.options = options
@@ -60,9 +64,9 @@ class SelTrebuchet:
         for _ in range(5):
             speed.send_keys(Keys.ARROW_RIGHT)
 
-    def enter_to_element(self, element_id: str, value: Union[str, int, float]) -> None:
+    def send_to_element(self, element_id: str, value: Union[str, int, float]) -> None:
         """
-        Enter a value to field at specified element ID and press return key
+        Enter a value to field at specified element ID
         """
         element = self.driver.find_element(By.ID, element_id)
         element.clear()
@@ -83,36 +87,29 @@ class SelTrebuchet:
         wait = WebDriverWait(self.driver, 60)
         wait.until(EC.element_to_be_clickable((By.TAG_NAME, "button")))
 
-        self.enter_to_element("lengthArmShort", shortarm_len)
-        self.enter_to_element("massWeight", weight_mass)
-        self.enter_to_element("releaseAngle", release_angle)
+        self.send_to_element("lengthArmShort", shortarm_len)
+        self.send_to_element("massWeight", weight_mass)
+        self.send_to_element("releaseAngle", release_angle)
 
         button = self.driver.find_elements(By.TAG_NAME, 'button')[0]
         button.click()
 
         try:
             wait = WebDriverWait(self.driver, 30)
-            wait.until(EC.presence_of_element_located((By.XPATH,
-                                                      '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+            wait.until(EC.presence_of_element_located(self.distance_xpath))
             # wait.until(lambda driver: self.wait_for_safe())
 
-            distance = self.driver.find_element(By.XPATH,
-                                                '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
-            height = self.driver.find_element(By.XPATH,
-                                              '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
-            time_ = self.driver.find_element(By.XPATH,
-                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
+            distance = self.driver.find_element(*self.distance_xpath).text
+            height = self.driver.find_element(*self.height_xpath).text
+            time_ = self.driver.find_element(*self.time_xpath).text
         except StaleElementReferenceException:
+            # Single retry if stale element
             wait = WebDriverWait(self.driver, 30)
-            wait.until(EC.presence_of_element_located((By.XPATH,
-                                                       '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]')))
+            wait.until(EC.presence_of_element_located(self.distance_xpath))
 
-            distance = self.driver.find_element(By.XPATH,
-                                                '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[1]/td[2]').text
-            height = self.driver.find_element(By.XPATH,
-                                              '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[2]/td[2]').text
-            time_ = self.driver.find_element(By.XPATH,
-                                             '//*[@id="output"]/div/div/div[1]/div[1]/table/tbody/tr[3]/td[2]').text
+            distance = self.driver.find_element(*self.distance_xpath).text
+            height = self.driver.find_element(*self.height_xpath).text
+            time_ = self.driver.find_element(*self.time_xpath).text
 
         distance = float(distance.split(' ')[0])
         height = float(height.split(' ')[0])
