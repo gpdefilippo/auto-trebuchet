@@ -3,13 +3,13 @@ import os
 import logging
 from PyQt5 import QtWidgets, QtCore
 
-from trebuchet import run_design
+from trebuchet import run_design, load_design, validate_design
 
 
 class TrebuchetApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.design_path = None
+        self.design = None
         self.data_out = None
         self.browser = 'firefox'
 
@@ -20,52 +20,71 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.setGeometry(100, 100, 400, 200)
 
         self.file_drop = DropSection()
-        self.file_drop.fileDropCompleted.connect(self.enable_run)
-        self.last_uploaded = QtWidgets.QLabel("File Uploaded: ")
+        self.file_drop.file_drop_completed.connect(self.on_file_dropped)
+        self.file_upload_label = QtWidgets.QLabel("File Uploaded: ")
         self.run_button = QtWidgets.QPushButton("Run")
         self.run_button.setEnabled(False)
-        self.results_button = QtWidgets.QPushButton("Download Results")
-        self.results_button.setEnabled(False)
+        self.download_button = QtWidgets.QPushButton("Download Results")
+        self.download_button.setEnabled(False)
         self.footer = QtWidgets.QLabel("Please Upload A Design File Above")
         self.footer.setStyleSheet("font-size: 10px;")
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.file_drop)
-        layout.addWidget(self.last_uploaded)
+        layout.addWidget(self.file_upload_label)
         layout.addWidget(self.run_button)
-        layout.addWidget(self.results_button)
+        layout.addWidget(self.download_button)
         layout.addWidget(self.footer)
 
         self.setLayout(layout)
 
-        self.run_button.clicked.connect(self.run_function)
-        self.results_button.clicked.connect(self.download_results)
+        self.run_button.clicked.connect(self.click_run)
+        self.download_button.clicked.connect(self.click_download)
 
-    def run_function(self):
+    def click_run(self):
         try:
             self.footer.setText("Running Design...")
-            self.results_button.setEnabled(False)
-            self.data_out = run_design(self.file_drop.design_path, self.browser)
-            self.results_button.setEnabled(True)
+            self.footer.setStyleSheet('color: white;')
+            self.download_button.setEnabled(False)
+            self.data_out = run_design(self.design, self.browser)
+            self.download_button.setEnabled(True)
             self.footer.setText("Design Complete")
         except KeyError:
             self.footer.setText("Error: Design has invalid variable names")
             self.footer.setStyleSheet('color: red;')
+            self.file_upload_label.setText("File Uploaded: ")
 
-    def download_results(self):
+    def click_download(self):
         default_filename = os.path.basename(self.file_drop.design_path)
         file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save to Excel", default_filename,
                                                           "Excel Files (*.xlsx);;All Files (*)")[0]
         self.data_out.to_excel(file_path, index=False)
-        self.footer.setText('Download Design Complete')
+        self.footer.setText('Download Complete')
 
-    def enable_run(self):
-        self.last_uploaded.setText(f"File Uploaded: {os.path.basename(self.file_drop.design_path)}")
-        self.run_button.setEnabled(True)
+    def on_file_dropped(self):
+        try:
+            self.design = load_design(self.file_drop.design_path)
+            is_valid, error = validate_design(self.design)
+            if not is_valid:
+                self.footer.setText(f'{error}')
+                self.footer.setStyleSheet('color: red;')
+                self.run_button.setEnabled(False)
+                self.file_upload_label.setText("File Uploaded: ")
+            else:
+                self.file_upload_label.setText(f"File Uploaded: {os.path.basename(self.file_drop.design_path)}")
+                self.run_button.setEnabled(True)
+                self.footer.setText("Upload Successful")
+                self.footer.setStyleSheet('color: white;')
+        except ValueError:
+            self.design = None
+            self.footer.setText(f'Invalid format. Please upload an Excel file')
+            self.footer.setStyleSheet('color: red;')
+            self.run_button.setEnabled(False)
+            self.file_upload_label.setText("File Uploaded: ")
 
 
 class DropSection(QtWidgets.QWidget):
-    fileDropCompleted = QtCore.pyqtSignal()
+    file_drop_completed = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -88,12 +107,11 @@ class DropSection(QtWidgets.QWidget):
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
-            event.accept()
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         self.design_path = event.mimeData().urls()[0].toLocalFile()
-        self.fileDropCompleted.emit()
+        self.file_drop_completed.emit()
 
 
 if __name__ == '__main__':
