@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 from PyQt5 import QtWidgets, QtCore
+from pandas import DataFrame
 
 from trebuchet import run_design, load_design, validate_design
 
@@ -14,6 +15,7 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.design = None
         self.data_out = None
         self.browser = 'firefox'
+        self.design_runner = None
 
         self.setupUI()
 
@@ -53,23 +55,22 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.download_button.clicked.connect(self.click_download)
 
     def click_run(self):
-        try:
-            self.browser = self.browser_combo.currentText().lower()
-            self.footer.setText("Running Design...")
-            self.footer.setStyleSheet('color: white;')
-            self.download_button.setEnabled(False)
-            self.data_out = run_design(self.design, self.browser)
-            self.download_button.setEnabled(True)
-            self.footer.setText("Design Complete")
-        except KeyError:
-            self.footer.setText("Error: Design has invalid variable names")
-            self.footer.setStyleSheet('color: red;')
-            self.file_upload_label.setText("File Uploaded: ")
+        self.browser = self.browser_combo.currentText().lower()
+        self.footer.setText("Running Design...")
+        self.footer.setStyleSheet('color: white;')
+        self.download_button.setEnabled(False)
+
+        self.design_runner = DesignRunner(self.design, self.browser)
+        self.design_runner.design_completed.connect(self.on_design_completed)
+        self.design_runner.start()
 
     def click_download(self):
         default_filename = os.path.basename(self.file_drop.design_path)
         file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save to Excel", default_filename,
                                                           "Excel Files (*.xlsx);;All Files (*)")[0]
+        if not file_path:
+            return
+        
         self.data_out.to_excel(file_path, index=False)
         self.footer.setText('Download Complete')
 
@@ -96,6 +97,15 @@ class TrebuchetApp(QtWidgets.QWidget):
             self.run_button.setEnabled(False)
             self.run_button.setStyleSheet('')
             self.file_upload_label.setText("File Uploaded: ")
+
+    def on_design_completed(self, data_out: DataFrame):
+        if data_out is not None:
+            self.download_button.setEnabled(True)
+            self.footer.setText("Design Complete")
+            self.data_out = data_out
+        else:
+            self.footer.setText("An error occurred during the run, please see log file")
+            self.footer.setStyleSheet('color: red;')
 
 
 class DropSection(QtWidgets.QWidget):
@@ -127,6 +137,23 @@ class DropSection(QtWidgets.QWidget):
     def dropEvent(self, event):
         self.design_path = event.mimeData().urls()[0].toLocalFile()
         self.file_drop_completed.emit()
+
+
+class DesignRunner(QtCore.QThread):
+    design_completed = QtCore.pyqtSignal(object)
+
+    def __init__(self, design, browser):
+        super().__init__()
+        self.design = design
+        self.browser = browser
+
+    def run(self):
+        try:
+            result = run_design(self.design, self.browser)
+            self.design_completed.emit(result)
+        except Exception as e:
+            logging.exception(f"An error occurred in DesignRunner: {str(e)}")
+            self.design_completed.emit(None)
 
 
 if __name__ == '__main__':
