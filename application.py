@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from pandas import DataFrame
 
 from trebuchet import run_design, load_design, validate_design
@@ -22,6 +22,8 @@ class TrebuchetApp(QtWidgets.QWidget):
     def setupUI(self):
         self.setWindowTitle("Virtual Trebuchet Automator")
         self.setGeometry(100, 100, 400, 200)
+        app_icon = QtGui.QIcon.fromTheme('AppIcon', QtGui.QIcon('AppIcon.iconset/icon_512x512.png'))
+        self.setWindowIcon(app_icon)
 
         self.file_drop = DropSection()
         self.file_drop.file_drop_completed.connect(self.on_file_dropped)
@@ -142,6 +144,7 @@ class DropSection(QtWidgets.QWidget):
     def dropEvent(self, event):
         self.design_path = event.mimeData().urls()[0].toLocalFile()
         if self.design_path.lower().endswith(self.valid_ext):
+            event.acceptProposedAction()
             self.file_drop_completed.emit()
 
 
