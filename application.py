@@ -1,7 +1,8 @@
 import sys
 import os
 import logging
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
+from pandas import DataFrame
 
 from trebuchet import run_design, load_design, validate_design
 
@@ -14,12 +15,15 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.design = None
         self.data_out = None
         self.browser = 'firefox'
+        self.design_runner = None
 
         self.setupUI()
 
     def setupUI(self):
         self.setWindowTitle("Virtual Trebuchet Automator")
         self.setGeometry(100, 100, 400, 200)
+        app_icon = QtGui.QIcon.fromTheme('AppIcon', QtGui.QIcon('AppIcon.iconset/icon_512x512.png'))
+        self.setWindowIcon(app_icon)
 
         self.file_drop = DropSection()
         self.file_drop.file_drop_completed.connect(self.on_file_dropped)
@@ -32,6 +36,9 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.browser_combo.setCurrentText('Firefox')
         self.download_button = QtWidgets.QPushButton("Download Results")
         self.download_button.setEnabled(False)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.footer = QtWidgets.QLabel("Upload A Design File Above")
         self.footer.setStyleSheet("font-size: 10px;")
 
@@ -45,6 +52,7 @@ class TrebuchetApp(QtWidgets.QWidget):
         layout.addWidget(self.file_drop)
         layout.addWidget(self.file_upload_label)
         layout.addWidget(self.download_button)
+        layout.addWidget(line)
         layout.addWidget(self.footer)
 
         self.setLayout(layout)
@@ -53,23 +61,22 @@ class TrebuchetApp(QtWidgets.QWidget):
         self.download_button.clicked.connect(self.click_download)
 
     def click_run(self):
-        try:
-            self.browser = self.browser_combo.currentText().lower()
-            self.footer.setText("Running Design...")
-            self.footer.setStyleSheet('color: white;')
-            self.download_button.setEnabled(False)
-            self.data_out = run_design(self.design, self.browser)
-            self.download_button.setEnabled(True)
-            self.footer.setText("Design Complete")
-        except KeyError:
-            self.footer.setText("Error: Design has invalid variable names")
-            self.footer.setStyleSheet('color: red;')
-            self.file_upload_label.setText("File Uploaded: ")
+        self.browser = self.browser_combo.currentText().lower()
+        self.footer.setText("Running Design...")
+        self.footer.setStyleSheet('color: white; font-size: 10px;')
+        self.download_button.setEnabled(False)
+
+        self.design_runner = DesignRunner(self.design, self.browser)
+        self.design_runner.design_completed.connect(self.on_design_completed)
+        self.design_runner.start()
 
     def click_download(self):
         default_filename = os.path.basename(self.file_drop.design_path)
         file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save to Excel", default_filename,
                                                           "Excel Files (*.xlsx);;All Files (*)")[0]
+        if not file_path:
+            return
+        
         self.data_out.to_excel(file_path, index=False)
         self.footer.setText('Download Complete')
 
@@ -79,7 +86,7 @@ class TrebuchetApp(QtWidgets.QWidget):
             is_valid, error = validate_design(self.design)
             if not is_valid:
                 self.footer.setText(f'{error}')
-                self.footer.setStyleSheet('color: red;')
+                self.footer.setStyleSheet('color: red; font-size: 10px;')
                 self.run_button.setEnabled(False)
                 self.run_button.setStyleSheet('')
                 self.file_upload_label.setText("File Uploaded: ")
@@ -88,18 +95,28 @@ class TrebuchetApp(QtWidgets.QWidget):
                 self.run_button.setEnabled(True)
                 self.run_button.setStyleSheet('background-color: #65C1FF;')
                 self.footer.setText("Upload Successful")
-                self.footer.setStyleSheet('color: white;')
+                self.footer.setStyleSheet('color: white; font-size: 10px;')
         except ValueError:
             self.design = None
             self.footer.setText(f'Invalid format. Please upload an Excel file')
-            self.footer.setStyleSheet('color: red;')
+            self.footer.setStyleSheet('color: red; font-size: 10px;')
             self.run_button.setEnabled(False)
             self.run_button.setStyleSheet('')
             self.file_upload_label.setText("File Uploaded: ")
 
+    def on_design_completed(self, data_out: DataFrame):
+        if data_out is not None:
+            self.download_button.setEnabled(True)
+            self.footer.setText("Design Complete")
+            self.data_out = data_out
+        else:
+            self.footer.setText("An error occurred during the run, please see log file")
+            self.footer.setStyleSheet('color: red; font-size: 10px;')
+
 
 class DropSection(QtWidgets.QWidget):
     file_drop_completed = QtCore.pyqtSignal()
+    valid_ext = ('xls', 'xlsx', 'xlsm', 'xlsb', 'odf', 'ods', 'odt')
 
     def __init__(self):
         super().__init__()
@@ -126,7 +143,26 @@ class DropSection(QtWidgets.QWidget):
 
     def dropEvent(self, event):
         self.design_path = event.mimeData().urls()[0].toLocalFile()
-        self.file_drop_completed.emit()
+        if self.design_path.lower().endswith(self.valid_ext):
+            event.acceptProposedAction()
+            self.file_drop_completed.emit()
+
+
+class DesignRunner(QtCore.QThread):
+    design_completed = QtCore.pyqtSignal(object)
+
+    def __init__(self, design, browser):
+        super().__init__()
+        self.design = design
+        self.browser = browser
+
+    def run(self):
+        try:
+            result = run_design(self.design, self.browser)
+            self.design_completed.emit(result)
+        except Exception as e:
+            logging.exception(f"An error occurred in DesignRunner: {str(e)}")
+            self.design_completed.emit(None)
 
 
 if __name__ == '__main__':
