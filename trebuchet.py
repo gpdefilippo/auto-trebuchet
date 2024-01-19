@@ -22,6 +22,9 @@ valid_headers = {
     'projectileDiameter',
     'windSpeed',
     'releaseAngle',
+    'distance',
+    'height',
+    'time',
 }
 
 
