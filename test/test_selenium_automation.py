@@ -6,12 +6,13 @@ from selenium_automation import SelTrebuchet
 class TestSelTrebuchet(unittest.TestCase):
     def test_simulate_firefox(self):
         with SelTrebuchet(browser='firefox') as trebuchet:
-            len_shortarm = 1.0
-            mass_weight = 50.0
-            angle_release = 60.0
+            params = {
+                'lengthArmShort': 1.0,
+                'massWeight': 50.0,
+                'releaseAngle': 60.0,
+            }
 
-            distance, height, time = trebuchet.simulate(
-                len_shortarm, mass_weight, angle_release)
+            distance, height, time = trebuchet.simulate(params)
 
         self.assertAlmostEqual(distance, 44.546, places=1)
         self.assertAlmostEqual(height, 34.870, places=1)
@@ -19,12 +20,13 @@ class TestSelTrebuchet(unittest.TestCase):
 
     def test_simulate_chrome(self):
         with SelTrebuchet(browser='chrome') as trebuchet:
-            len_shortarm = 1.0
-            mass_weight = 50.0
-            angle_release = 60.0
+            params = {
+                'lengthArmShort': 1.0,
+                'massWeight': 50.0,
+                'releaseAngle': 60.0,
+            }
 
-            distance, height, time = trebuchet.simulate(
-                len_shortarm, mass_weight, angle_release)
+            distance, height, time = trebuchet.simulate(params)
 
         self.assertAlmostEqual(distance, 44.546, places=1)
         self.assertAlmostEqual(height, 34.870, places=1)
@@ -33,12 +35,13 @@ class TestSelTrebuchet(unittest.TestCase):
     @unittest.skip("Skipping due to Edge giving problems w/ Github Actions")
     def test_simulate_edge(self):
         with SelTrebuchet(browser='edge') as trebuchet:
-            len_shortarm = 1.0
-            mass_weight = 50.0
-            angle_release = 60.0
+            params = {
+                'lengthArmShort': 1.0,
+                'massWeight': 50.0,
+                'releaseAngle': 60.0,
+            }
 
-            distance, height, time = trebuchet.simulate(
-                len_shortarm, mass_weight, angle_release)
+            distance, height, time = trebuchet.simulate(params)
 
         self.assertAlmostEqual(distance, 44.546, places=1)
         self.assertAlmostEqual(height, 34.870, places=1)

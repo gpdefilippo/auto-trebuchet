@@ -7,16 +7,32 @@ from pandas import DataFrame
 from selenium_automation import SelTrebuchet
 
 parent_directory = os.path.dirname(os.path.abspath(__file__))
-valid_headers = {'rel angle', 'length short arm', 'mass of wt'}
+valid_headers = {
+    'lengthArmShort',
+    'lengthArmLong',
+    'lengthSling',
+    'lengthWeight',
+    'heightOfPivot',
+    'massArm',
+    'inertiaArm',
+    'pivotToArmCG',
+    'massWeight',
+    'inertiaWeight',
+    'massProjectile',
+    'projectileDiameter',
+    'windSpeed',
+    'releaseAngle',
+}
 
 
 def run_design(design: DataFrame, browser: str = 'firefox', options: ArgOptions = None) -> DataFrame:
+    excluded = {'distance', 'height', 'time'}
     distance, height, time = [0] * design.shape[0], [0] * design.shape[0], [0] * design.shape[0]
     with SelTrebuchet(browser, options=options) as trebuchet:
         for idx, row in design.iterrows():
-            distance[idx], height[idx], time[idx] = trebuchet.simulate(release_angle=row['rel angle'],
-                                                                       shortarm_len=row['length short arm'],
-                                                                       weight_mass=row['mass of wt'])
+            cols = [col for col in design.columns if col not in excluded]
+            params = row[cols].to_dict()
+            distance[idx], height[idx], time[idx] = trebuchet.simulate(params)
 
     design['distance'], design['height'], design['time'] = distance, height, time
     return design
