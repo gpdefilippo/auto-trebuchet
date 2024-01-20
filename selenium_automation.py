@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
@@ -72,14 +72,12 @@ class SelTrebuchet:
         element.clear()
         element.send_keys(f"{value}")
 
-    def simulate(self, shortarm_len: float, weight_mass: float, release_angle: float) -> Tuple[float, float, float]:
+    def simulate(self, params: Dict[str, float]) -> Tuple[float, float, float]:
         """
         Simulate virtual trebuchet with given parameters.
 
         Args:
-            shortarm_len (float): Length of the short arm in ft
-            weight_mass (float): Mass of the weight in lbs
-            release_angle (float): Release angle in degrees.
+            params
 
         Returns:
             Tuple[float, float, float]: A tuple containing max (distance, height, time) of trebuchet launch.
@@ -87,9 +85,8 @@ class SelTrebuchet:
         wait = WebDriverWait(self.driver, 60)
         wait.until(EC.element_to_be_clickable((By.TAG_NAME, "button")))
 
-        self.send_to_element("lengthArmShort", shortarm_len)
-        self.send_to_element("massWeight", weight_mass)
-        self.send_to_element("releaseAngle", release_angle)
+        for param in params:
+            self.send_to_element(param, params[param])
 
         button = self.driver.find_elements(By.TAG_NAME, 'button')[0]
         button.click()
