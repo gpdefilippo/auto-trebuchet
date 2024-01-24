@@ -110,6 +110,6 @@ webcolors==1.13
 webdriver-manager==4.0.1
 webencodings==0.5.1
 websocket-client==1.6.4
-wheel==0.37.1
+wheel==0.38.1
 wsproto==1.2.0
 yarg==0.1.9
